@@ -14,8 +14,9 @@ services:
       - "16262:16262/udp"
       - "27015:27015/tcp"
     volumes:
-      - ./save-data:/home/steam/Zomboid
+      - pz-data:/home/steam/Zomboid
       - pz-server:/home/steam/pz-dedicated
 volumes:
+  pz-data:
   pz-server:
 
