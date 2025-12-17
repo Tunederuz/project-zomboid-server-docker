@@ -1,7 +1,7 @@
 #!/bin/bash
 
-STEAMAPPFULLNAME=${STEAMAPP}-dedicated
-STEAMAPPDIR="${HOMEDIR}/${STEAMAPPFULLNAME}"
+STEAMAPP=${STEAMAPP:-'pz'}
+STEAMAPPDIR="${HOMEDIR}/${STEAMAPP}"
 
 cd ${STEAMAPPDIR}
 
@@ -30,11 +30,15 @@ if [ -z "$(ls -A "$STEAMAPPDIR" 2>/dev/null)" ]; then
   && chown -R "${USER}:${USER}" "${STEAMAPPDIR}" \
 
   NEED_UPDATE=1
+elif [ "$FORCEUPDATE" = "1" ]; then
+  echo "FORCEUPDATE enabled"
+  NEED_UPDATE=1
 else
   echo "Existing server files found, skipping download"
 fi
 
 if [ "$NEED_UPDATE" = "1" ]; then
+  set -x
   echo "⬇Running SteamCMD update"
 
   bash "${STEAMCMDDIR}/steamcmd.sh" \
@@ -189,10 +193,10 @@ fi
 # Fixes EOL in script file for good measure
 sed -i 's/\r$//' /server/scripts/search_folder.sh
 # Check 'search_folder.sh' script for details
-if [ -e "${HOMEDIR}/${STEAMAPPFULLNAME}/steamapps/workshop/content/108600" ]; then
+if [ -e "${HOMEDIR}/${STEAMAPP}/steamapps/workshop/content/108600" ]; then
 
   map_list=""
-  source /server/scripts/search_folder.sh "${HOMEDIR}/${STEAMAPPFULLNAME}/steamapps/workshop/content/108600"
+  source /server/scripts/search_folder.sh "${HOMEDIR}/${STEAMAPP}/steamapps/workshop/content/108600"
   map_list=$(<"${HOMEDIR}/maps.txt")  
   rm "${HOMEDIR}/maps.txt"
 
@@ -204,7 +208,7 @@ if [ -e "${HOMEDIR}/${STEAMAPPFULLNAME}/steamapps/workshop/content/108600" ]; th
     IFS=";" read -ra strings <<< "$map_list"
     for string in "${strings[@]}"; do
         if ! grep -q "$string" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}_spawnregions.lua"; then
-          if [ -e "${HOMEDIR}/${STEAMAPPFULLNAME}/media/maps/$string/spawnpoints.lua" ]; then
+          if [ -e "${HOMEDIR}/${STEAMAPP}/media/maps/$string/spawnpoints.lua" ]; then
             result="{ name = \"$string\", file = \"media/maps/$string/spawnpoints.lua\" },"
             sed -i "/function SpawnRegions()/,/return {/ {    /return {/ a\
             \\\t\t$result

@@ -15,8 +15,7 @@ services:
       - "27015:27015/tcp"
     volumes:
       - pz-data:/home/steam/Zomboid
-      - pz-server:/home/steam/pz-dedicated
+      - pz-server:/home/steam/pz
 volumes:
   pz-data:
   pz-server:
-
