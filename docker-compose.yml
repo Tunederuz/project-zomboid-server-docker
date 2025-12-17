@@ -9,6 +9,8 @@ services:
       SERVERNAME: 'pz-server'
       STEAMAPPBRANCH: 'unstable'
       FORCEUPDATE: 1 # Recommended if you have workshop items
+      UID: 1000
+      GID: 1000
     ports:
       - "16261:16261/udp"
       - "16262:16262/udp"

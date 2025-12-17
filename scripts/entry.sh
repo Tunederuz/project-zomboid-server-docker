@@ -13,6 +13,24 @@ if [ "${FORCESTEAMCLIENTSOUPDATE}" == "1" ]; then
   cp "${STEAMCMDDIR}/linux32/steamclient.so" "${STEAMAPPDIR}/steamclient.so"
 fi
 
+#####################################
+#                                   #
+# Setup UID and GID                #
+#                                   #
+#####################################
+
+# Default to 568 if not provided
+TARGET_UID="${UID:-1000}"
+TARGET_GID="${GID:-1000}"
+
+# Change steam user's UID/GID dynamically
+echo "Adjusting steam user to UID=$TARGET_UID, GID=$TARGET_GID"
+
+# Change GID first to avoid conflicts
+groupmod -g "$TARGET_GID" steam
+usermod -u "$TARGET_UID" -g "$TARGET_GID" steam
+chown -R ${TARGET_UID}:${TARGET_GID} ${HOMEDIR}
+
 NEED_UPDATE=0
 
 
@@ -27,7 +45,7 @@ if [ -z "$(ls -A "$STEAMAPPDIR" 2>/dev/null)" ]; then
   echo "Install directory empty, downloading server"
 
   mkdir -p "${STEAMAPPDIR}" \
-  && chown -R "${USER}:${USER}" "${STEAMAPPDIR}" \
+  && chown -R "${TARGET_UID}:${TARGET_GID}" "${STEAMAPPDIR}" \
 
   NEED_UPDATE=1
 elif [ "$FORCEUPDATE" = "1" ]; then
@@ -259,7 +277,7 @@ fi
 export LD_LIBRARY_PATH="${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}"
 
 ## Fix the permissions in the data and workshop folders
-chown -R 1000:1000 ${STEAMAPPDIR}/steamapps/workshop ${CACHEDIR:-'/home/steam/Zomboid'}
+chown -R ${TARGET_UID}:${TARGET_GID} ${STEAMAPPDIR}/steamapps/workshop ${CACHEDIR:-'/home/steam/Zomboid'}
 # When binding a host folder with Docker to the container, the resulting folder has these permissions "d---" (i.e. NO `rwx`) 
 # which will cause runtime issues after launching the server.
 # Fix it the adding back `rwx` permissions for the file owner (steam user)
