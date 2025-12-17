@@ -28,7 +28,8 @@ RUN sed -i 's/^# *\(es_ES.UTF-8\)/\1/' /etc/locale.gen \
 RUN set -x \
   && mkdir -p "${STEAMAPPDIR}" \
   && chown -R "${USER}:${USER}" "${STEAMAPPDIR}" \
-  && bash "${STEAMCMDDIR}/steamcmd.sh" +force_install_dir "${STEAMAPPDIR}" \
+  && bash "${STEAMCMDDIR}/steamcmd.sh" \
+  +force_install_dir "${STEAMAPPDIR}" \
   +login anonymous \
   +app_update "${STEAMAPPID}" validate \
   +quit
