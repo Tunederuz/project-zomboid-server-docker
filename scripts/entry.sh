@@ -1,5 +1,8 @@
 #!/bin/bash
 
+STEAMAPPFULLNAME=${STEAMAPP}-dedicated
+STEAMAPPDIR="${HOMEDIR}/${STEAMAPPFULLNAME}"
+
 cd ${STEAMAPPDIR}
 
 echo "Project Zomboid container starting..."
@@ -190,10 +193,10 @@ fi
 # Fixes EOL in script file for good measure
 sed -i 's/\r$//' /server/scripts/search_folder.sh
 # Check 'search_folder.sh' script for details
-if [ -e "${HOMEDIR}/pz-dedicated/steamapps/workshop/content/108600" ]; then
+if [ -e "${HOMEDIR}/${STEAMAPPFULLNAME}/steamapps/workshop/content/108600" ]; then
 
   map_list=""
-  source /server/scripts/search_folder.sh "${HOMEDIR}/pz-dedicated/steamapps/workshop/content/108600"
+  source /server/scripts/search_folder.sh "${HOMEDIR}/${STEAMAPPFULLNAME}/steamapps/workshop/content/108600"
   map_list=$(<"${HOMEDIR}/maps.txt")  
   rm "${HOMEDIR}/maps.txt"
 
@@ -205,7 +208,7 @@ if [ -e "${HOMEDIR}/pz-dedicated/steamapps/workshop/content/108600" ]; then
     IFS=";" read -ra strings <<< "$map_list"
     for string in "${strings[@]}"; do
         if ! grep -q "$string" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}_spawnregions.lua"; then
-          if [ -e "${HOMEDIR}/pz-dedicated/media/maps/$string/spawnpoints.lua" ]; then
+          if [ -e "${HOMEDIR}/${STEAMAPPFULLNAME}/media/maps/$string/spawnpoints.lua" ]; then
             result="{ name = \"$string\", file = \"media/maps/$string/spawnpoints.lua\" },"
             sed -i "/function SpawnRegions()/,/return {/ {    /return {/ a\
             \\\t\t$result
@@ -221,7 +224,7 @@ fi
 export LD_LIBRARY_PATH="${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}"
 
 ## Fix the permissions in the data and workshop folders
-chown -R 1000:1000 /home/steam/pz-dedicated/steamapps/workshop /home/steam/Zomboid
+chown -R 1000:1000 ${STEAMAPPDIR}/steamapps/workshop ${CACHEDIR:-'/home/steam/Zomboid'}
 # When binding a host folder with Docker to the container, the resulting folder has these permissions "d---" (i.e. NO `rwx`) 
 # which will cause runtime issues after launching the server.
 # Fix it the adding back `rwx` permissions for the file owner (steam user)
