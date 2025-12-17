@@ -39,13 +39,48 @@ fi
 
 if [ "$NEED_UPDATE" = "1" ]; then
   set -x
-  echo "⬇Running SteamCMD update"
+  echo "⬇ Running SteamCMD update"
 
-  bash "${STEAMCMDDIR}/steamcmd.sh" \
-  +force_install_dir "${STEAMAPPDIR}" \
-  +login anonymous \
-  +app_update "${STEAMAPPID}" ${STEAMAPPBRANCH:+-beta "$STEAMAPPBRANCH"} validate \
-  +quit
+  export STEAMCMD_FORCE_IPV4=1
+
+  LOCKFILE="${STEAMAPPDIR}/.steamcmd.lock"
+  exec 9>"$LOCKFILE"
+  flock -n 9 || {
+    echo "Another SteamCMD process is running, waiting..."
+    flock 9
+  }
+
+  MAX_RETRIES=5
+  RETRY=1
+
+  while [ $RETRY -le $MAX_RETRIES ]; do
+    echo "SteamCMD attempt ${RETRY}/${MAX_RETRIES}"
+
+    if bash "${STEAMCMDDIR}/steamcmd.sh" \
+      +force_install_dir "${STEAMAPPDIR}" \
+      +login anonymous \
+      +app_update "${STEAMAPPID}" \
+      ${STEAMAPPBRANCH:+-beta "$STEAMAPPBRANCH"} \
+      validate \
+      +quit
+    then
+      echo "SteamCMD update succeeded"
+      break
+    fi
+
+    echo "!! SteamCMD failed (attempt ${RETRY})"
+
+    echo "Clearing SteamCMD cache"
+    rm -rf "${HOME}/.steam" "${HOME}/.local/share/Steam"
+
+    RETRY=$((RETRY + 1))
+    sleep 2
+  done
+
+  if [ $RETRY -gt $MAX_RETRIES ]; then
+    echo "SteamCMD failed after ${MAX_RETRIES} attempts"
+    exit 1
+  fi
 fi
 
 
